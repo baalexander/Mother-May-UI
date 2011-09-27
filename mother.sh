@@ -60,6 +60,15 @@ function lastModifiedTime {
   echo $(find "${1}" -exec stat -f "%m" \{} \; | sort -n -r | head -1)
 }
 
+function fullPath {
+  dir=$(dirname ${1})
+  filename=$(basename ${1})
+  originalDir=${PWD}
+  cd "${dir}"
+  absoluteDir=${PWD}
+  cd ${originalDir}
+  echo "${absoluteDir}/${filename}"
+}
 
 # Options
 
@@ -118,7 +127,7 @@ fi
 
 if [[ -d ${app} ]]
 then
-  targetApp=${app}
+  targetApp="${app}"
 else
   mostRecentlyModifiedTime=-1
   environment=""
@@ -135,7 +144,7 @@ else
     if [[ "${modifiedTime}" == -1 ]]
     then
       mostRecentlyModifiedTime=$(lastModifiedTime ${potentialApp})
-      targetApp=${potentialApp}
+      targetApp="${potentialApp}"
     fi
 
     modifiedTime=$(lastModifiedTime ${potentialApp})
@@ -143,7 +152,7 @@ else
     if [[ ${modifiedTime} > ${mostRecentlyModifiedTime} ]]
     then
       mostRecentlyModifiedTime=${modifiedTime}
-      targetApp=${potentialApp}
+      targetApp="${potentialApp}"
     fi
   done
 fi
@@ -153,7 +162,7 @@ then
   echo "Error: Could not find ${app}" >&2
   exit 1
 else
-  command="${command} ${targetApp}"
+  command="${command} \"${targetApp}\""
 fi
 
 
@@ -164,6 +173,7 @@ then
   mkdir -p "${outputDir}"
 fi
 
+outputDir="$(fullPath "${outputDir}")"
 command="${command} -e UIARESULTSPATH \"${outputDir}\""
 
 
@@ -184,7 +194,7 @@ else
   do
     if [[ -f "${scriptFile}" ]]
     then
-      testFile=$(find "${PWD}" -name "${scriptFile}")
+      testFile=$(fullPath "${scriptFile}")
     else
       echo "Error: Could not find ${scriptFile}"
       exit 1
@@ -202,16 +212,16 @@ fi
 
 # Workaround the output trace file by just changing to the output directory so any output ends up in there
 
-pushd . > /dev/null
+originalDir=${PWD}
 tempOutputDir="${outputDir}/tmp-$$"
-mkdir "${tempOutputDir}" > /dev/null
-pushd "${tempOutputDir}" > /dev/null
+mkdir "${tempOutputDir}"
+cd "${tempOutputDir}"
 
 eval ${command} || exit 1
 
-for tempTraceDocument in $(ls ${tempOutputDir})
+for tempTraceDocument in $(ls "${tempOutputDir}")
 do
-  targetAppName=$(basename ${targetApp})
+  targetAppName=$(basename "${targetApp}")
   finalTraceDocument="${outputDir}/${targetAppName}.trace"
   mv "${tempTraceDocument}" "${finalTraceDocument}"
 done
@@ -220,6 +230,5 @@ rm -rf "${tempOutputDir}"
 
 # Restore the working directory
 
-popd > /dev/null
-
+cd "${originalDir}"
 echo "Results are located in ${outputDir}"
