@@ -3,6 +3,7 @@
   var root   = this
     , mother = null
     , assert = null
+    , util   = null
 
   // Exports as CommonJS module
   if (typeof exports !== 'undefined') {
@@ -12,10 +13,16 @@
   else {
     mother = root.mother = {}
     assert = root.assert = {}
+    util   = root.util   = {}
   }
 
   // Mother
   // ------
+
+  mother.config = {
+    verbose: false
+  }
+
 
   // Each test case is referenced by name on the tests hash
   mother.tests = {}
@@ -82,7 +89,7 @@
   mother.please = function() {
     for (var i = 0; i < mother.scenarios.length; i++) {
       var scenario = mother.scenarios[i]
-      runScenario(scenario)
+      runScenario(scenario, this.config)
     }
 
     return this
@@ -99,26 +106,31 @@
   }
 
   // Run all the tests in a scenario
-  function runScenario(scenario) {
+  function runScenario(scenario, config) {
     UIALogger.logStart(scenario.name)
     mother.setUp.call(this)
+    scenario.passedTests = []
 
     var test = null
     try {
       for (var i = 0; i < scenario.tests.length; i++) {
         test = scenario.tests[i]
+
+        if (config.verbose) {
+          UIALogger.logMessage(test.name)
+        }
+
         test.testFunction.call(this)
+        scenario.passedTests[i] = test
       }
-
-      var successMessage = scenario.name + ' passed'
-      UIALogger.logPass(successMessage)
-
+      UIALogger.logPass(scenario.name)
     }
     catch (exception) {
       var failMessage = 'Error in test \'' + test.name + '\''
         + ' of scenario \'' + scenario.name + '\'.'
         + ' ' + exception.message;
       UIALogger.logFail(failMessage)
+      this.target.logElementTree()
     }
 
     mother.tearDown.call(this)
@@ -166,7 +178,28 @@
     }
   }
 
+  // Util
+  // ----
 
+  util.waitFor = function(element, timeout) {
+    if (timeout == null) {
+      timeout = 5.0
+    }
+
+    var delay = 0.1
+
+    for (var i = 0; i < timeout / delay; i++) {
+      UIATarget.localTarget().delay(delay)
+
+      if (element.isVisible()) {
+        return
+      }
+    }
+
+    var exception = {}
+    exception.message = "Element never became visible"
+    throw exception
+  }
 
 }).call(this)
 

@@ -41,6 +41,9 @@
 #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+# Fail on any error
+set -e
+
 app=""
 deviceID=""
 outputDir=""
@@ -197,14 +200,14 @@ then
 fi
 
 
-# Workaround the output trace fileit by just changing to the output directory so any output ends up in there
+# Workaround the output trace file by just changing to the output directory so any output ends up in there
 
 pushd . > /dev/null
 tempOutputDir="${outputDir}/tmp-$$"
 mkdir "${tempOutputDir}" > /dev/null
 pushd "${tempOutputDir}" > /dev/null
 
-eval ${command}
+eval ${command} || exit 1
 
 for tempTraceDocument in $(ls ${tempOutputDir})
 do
@@ -219,4 +222,4 @@ rm -rf "${tempOutputDir}"
 
 popd > /dev/null
 
-echo "Finished: Results are located in ${outputDir}"
+echo "Results are located in ${outputDir}"
