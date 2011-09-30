@@ -22,7 +22,13 @@
   // Configuration options
   // Can override in test file
   mother.config = {
-    verbose: false
+    verbose:         false
+  , takeScreenshotOptions: {
+      NEVER:  'NEVER'
+    , ERROR:  'ERROR'
+    , ALWAYS: 'ALWAYS'
+    }
+  , takeScreenshot: 'ERROR'
   }
 
 
@@ -138,6 +144,12 @@
         }
 
         test.testFunction.call(this)
+
+        if (mother.config.takeScreenshot == mother.config.takeScreenshotOptions.ALWAYS) {
+          var screenshotName = scenario.name + ' (' + test.name + ')'
+          UIATarget.localTarget().captureScreenWithName(screenshotName)
+        }
+
         scenario.passedTests[i] = test
       }
       UIALogger.logPass(scenario.name)
@@ -147,7 +159,16 @@
         + ' of scenario \'' + scenario.name + '\'.'
         + ' ' + exception.message;
       UIALogger.logFail(failMessage)
-      this.target.logElementTree()
+
+      if (mother.config.takeScreenshot == mother.config.takeScreenshotOptions.ALWAYS ||
+          mother.config.takeScreenshot == mother.config.takeScreenshotOptions.ERROR) {
+        var screenshotName = scenario.name + ' (' + test.name + ')'
+        UIATarget.localTarget().captureScreenWithName(screenshotName)
+      }
+
+      if (mother.config.verbose) {
+        UAITarget.localTarget().logElementTree()
+      }
     }
 
     mother.tearDown.call(this)
