@@ -1,4 +1,3 @@
-
 ## Intro
 
 Mother May UI is an automated BDD framework for iOS apps using [UI
@@ -108,7 +107,7 @@ testing to all JavaScript environments, including the browser, Node.js and iOS.
 iOS specific code will usually reside in an `ios` subdirectory.
 
  * `bin/` - Any shell scripts to help with running Mother May UI
- * `bin/ios/mother.js` - iOS specific shell script for launching instruments
+ * `bin/ios/mother.sh` - iOS specific shell script for launching instruments
  * `examples/` - Example code
  * `examples/ios/Car Lot/` - Example iOS project
  * `examples/ios/Car Lot/UI Tests/test.js` - Test file for example iOS project
