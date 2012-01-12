@@ -13,6 +13,7 @@
 #                 -a Sample.app
 #                 -o outputDir
 #                 -t testFile.js
+#                 -i
 #                 -v
 # 
 # Discussion:
@@ -38,6 +39,9 @@
 #
 #   The results of this script end up in the output directory under a
 #   timestamped subdirectory.
+#   
+#   Enabling the Inspect option (-i argument) will automatically open the 
+#   resulting trace document in Instruments.
 #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -67,9 +71,10 @@ targetApp=""
 traceTemplate=""
 command="instruments"
 verbose=0
+inspect=0
 testFile=""
 dateTime=$(date +%Y-%m-%dT%H.%M.%S)
-usage="Usage: ${0} -w <device ID> -a <app bundle> -o <output dir> -t <test file> [-v]"
+usage="Usage: ${0} -w <device ID> -a <app bundle> -o <output dir> -t <test file> [-i -v]"
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -87,7 +92,7 @@ function getAbsolutePath {
 }
 
 function parseOptions {
-  while getopts ":a:w:t:o:v" opt
+  while getopts ":a:w:t:o:iv" opt
   do
     case ${opt} in
       a)
@@ -101,6 +106,9 @@ function parseOptions {
         ;;
       o)
         outputDir="${OPTARG}/${dateTime}"
+        ;;
+      i)
+        inspect=1
         ;;
       v)
         verbose=1
@@ -210,6 +218,10 @@ function runTest {
     targetAppName=$(basename "${targetApp}")
     finalTraceDocument="${outputDir}/${targetAppName}.trace"
     mv "${tempTraceDocument}" "${finalTraceDocument}"
+    if (( ${inspect} > 0 ))
+    then
+        open "${finalTraceDocument}"
+    fi
   done
 
   # Cleans up
